@@ -2,6 +2,7 @@ import json
 import flask
 import mwapi
 
+from ores.contrib.mapper import MappingError
 
 host_mapper = {
     'enwiki': 'https://en.wikipedia.org',
@@ -27,7 +28,17 @@ class Mapper:
 
     def view_func(self, dbname):
         api = mwapi.Session(host_mapper[dbname])
+        try:
+            data = self.run(api, flask.request.args).realize(dbname)
+        except MappingError as e:
+            data = {
+                'error': {
+                    'code': e.code,
+                    'message': e.message,
+                    }
+                }
+
         return flask.Response(
-            response=json.dumps(self.run(api, flask.request.args).realize(dbname)),
+            response=json.dumps(data),
             mimetype='application/json'
         )

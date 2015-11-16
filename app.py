@@ -1,6 +1,6 @@
 import flask
 
-from ores.contrib.mapper import Mapper, MappingResponse
+from ores.contrib.mapper import Mapper, MappingResponse, MappingError
 
 app = flask.Flask(__name__)
 
@@ -32,6 +32,10 @@ class WP10PageMapper(Mapper):
                 meta[page[response_key]] = None
             else:
                 meta[page[response_key]] = page['revisions'][0]['revid']
+
+        if not any(meta.values()):
+            # There were no legit revids
+            raise MappingError('noexist', 'No revision ids found for the given request')
 
         return MappingResponse(
             'wp10',
